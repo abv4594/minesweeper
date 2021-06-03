@@ -1,4 +1,5 @@
 require_relative './square.rb'
+require 'byebug'
 
 class Board
     NUM_BOMBS = 13
@@ -10,7 +11,7 @@ class Board
     
     def [](pos)
         row,col = pos
-        @grid[row][pos]
+        @grid[row][col]
     end
 
     def render
@@ -20,6 +21,12 @@ class Board
             row.each {|square| print square.to_s + ' '}
             print "\n"
         end
+    end
+
+    def fill_bombs 
+        positions = (0..8).to_a.product((0..8).to_a)
+        bomb_positions = positions.sample(NUM_BOMBS)
+        bomb_positions.each {|pos| self[pos].set_bomb}
     end
 
 
