@@ -5,7 +5,9 @@ class Board
     NUM_BOMBS = 13
     def initialize 
         @grid = Array.new(9){Array.new(9)}
-        @grid.map! {|row| row.map{|square| Square.new}}
+        @grid.map!.with_index do |row, row_num| 
+            row.map.with_index {|square, col_num| Square.new(self,[row_num, col_num])}
+        end
 
     end
     
@@ -28,6 +30,24 @@ class Board
         bomb_positions = positions.sample(NUM_BOMBS)
         bomb_positions.each {|pos| self[pos].set_bomb}
     end
+
+    def reveal(pos)
+        self[pos].reveal
+    end
+
+    def my_pos(square)
+        row,col = -1, -1
+        debugger
+        @grid.each_with_index do |r, ridx|
+            if r.include?(square)
+                row = ridx
+                col = r.index(square)
+            end
+        end
+        [row,col]
+    end
+
+    
 
 
 end

@@ -1,8 +1,13 @@
 class Square
-    def initialize
+    def initialize(board, pos)
         @bomb = false 
         @flagged = false
         @revealed = false
+        @pertaining_board = board
+        @my_pos = pos
+    end
+    def inspect
+        {'has a bomb?' => @bomb, 'flagged?' => @flagged, 'revealed?' => @revealed, 'my_pos' => @my_pos}
     end
     def to_s
         if @revealed
