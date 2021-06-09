@@ -1,5 +1,7 @@
 class Square
 
+    require 'colorize'
+
     attr_accessor :content, :neighbors_with_bomb, :neighbors
 
     DELTAS = [[-1,-1],[-1,0],[-1,1],[0,1],[1,1],[1,0],[1,-1],[0,-1]]
@@ -33,29 +35,21 @@ class Square
     end
 
     def to_s(cheat = false)
+        return 'F'.colorize(:blue) if @flagged
         return @content unless @content.empty?
-        if @revealed || cheat
-            return 'B' if @bomb 
+        if @revealed 
+            return 'B'.colorize(:red) if has_bomb?
             return '_'
+        else
+            return 'B'.colorize(:red) if cheat && has_bomb?
         end
-        
-        return 'F' if @flagged
-        return '*'
+        return '*'.colorize(:green)
+
     end
-    def reveal 
-        # this method answers in three different ways
-        # if the square is flagged or already revealed, do nothing and return nil
-        # if not, reveal and
-        #   return false if contains a bomb
-        #   return true otherwise
-        return if @flagged || @revealed
-        @revealed = true
-        return false if self.has_bomb?
-        true
-    end
-    def reveal_neighbor
+    def reveal
         @revealed = true
     end
+
     def set_bomb
         @bomb = true
     end
@@ -73,11 +67,13 @@ class Square
     def set_neighbors_with_bomb
         @neighbors_with_bomb = @neighbors.select {|pos| @pertaining_board[pos].has_bomb?}
     end
- 
     def revealed?
         @revealed
     end
-
+    def flagged?
+        @flagged
+    end
+   
 
 end
 
