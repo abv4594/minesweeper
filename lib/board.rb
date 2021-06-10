@@ -2,8 +2,6 @@ require_relative './square.rb'
 require 'byebug'
 require 'io/console'
 
-ALREADY_FLAGGED_MSG = "You cannot reveal a flagged tile! First unflag it."
-ALREADY_REVEALED_MSG = "Tile already revealed. Pick another one."
 
 class Board
     NUM_BOMBS = 13
@@ -63,22 +61,6 @@ class Board
         self[pos].neighbors.each {|pos| reveal_all(pos)}
     end
 
-
-
-    # def reveal_all(pos,first)
-    #     return unless self[pos].content.empty?
-    #     return if self[pos].has_bomb?
-    #     return if !first && self[pos].revealed?
-    #     if self[pos].neighbors_with_bomb.count > 0
-    #         self[pos].reveal_neighbor
-    #         self[pos].content = self[pos].neighbors_with_bomb.count.to_s
-    #         return 
-
-    #     end 
-    #     self[pos].reveal_neighbor    
-    #     self[pos].neighbors.each {|pos| reveal_all(pos,false)}
-    # end 
-
     def won?
         @grid.flatten.count {|square| square.revealed?} == GRID_SIZE * GRID_SIZE - NUM_BOMBS
     end
@@ -94,11 +76,18 @@ class Board
     def neighbors(pos)
         self[pos].neighbors
     end
+    def flag(pos)
+        self[pos].flag
+    end
 end
 
 # test:
 
 if __FILE__ == $PROGRAM_NAME
+
+    FLAGGED_MSG = "You cannot reveal a flagged tile! First unflag it."
+    ALREADY_REVEALED_MSG = "Tile already revealed. Pick another one."
+
 
     b = Board.new
     b.fill_bombs
@@ -107,22 +96,25 @@ if __FILE__ == $PROGRAM_NAME
         puts
         b.render
         puts
-        puts "Please enter a position to reveal:"
-        pos_raw = gets.chomp
+        puts "Please enter a a command and position. Like F 2,3 or R 1,2"
+        user_input_raw = gets.chomp
+        cmd = user_input_raw[0].upcase
+        pos_raw = user_input_raw[2..-1]
         pos = pos_raw.split(",").map(&:to_i)
-        if b.flagged?(pos)
-            b.prompt_error(ALREADY_FLAGGED_MSG)
-            continue
+        if cmd == 'F'
+            b.flag(pos)
+        elsif cmd == 'R'
+            if b.flagged?(pos)
+                b.prompt_error(FLAGGED_MSG)
+            elsif b.revealed?(pos)
+                b.prompt_error(ALREADY_REVEALED_MSG)
+            else 
+                b.reveal(pos)
+                break if b.lost?(pos)
+                b.neighbors(pos).each {|pos| b.reveal_all(pos)}
+            
+            end
         end
-        if b.revealed?(pos)
-            b.prompt_error(ALREADY_REVEALED_MSG)
-            continue
-        end
-        b.reveal(pos)
-        if b.lost?(pos)
-            break
-        end 
-        b.neighbors(pos).each {|pos| b.reveal_all(pos)}
     end
     system ("clear")
     b.render

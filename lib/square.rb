@@ -35,13 +35,12 @@ class Square
     end
 
     def to_s(cheat = false)
+        return 'B'.colorize(:red) if has_bomb? && cheat
         return 'F'.colorize(:blue) if @flagged
         return @content unless @content.empty?
         if @revealed 
             return 'B'.colorize(:red) if has_bomb?
             return '_'
-        else
-            return 'B'.colorize(:red) if cheat && has_bomb?
         end
         return '*'.colorize(:green)
 
@@ -56,10 +55,7 @@ class Square
 
     def flag
         return if @revealed #cannot flag a revealed square
-        @flagged = true unless @flagged
-    end
-    def unflag
-        @flagged = false if @flagged
+        @flagged = !@flagged
     end
     def has_bomb?
         @bomb
