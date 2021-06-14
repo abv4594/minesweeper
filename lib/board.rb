@@ -79,14 +79,18 @@ class Board
     def flag(pos)
         self[pos].flag
     end
+    def board_already_filled?
+        @grid.flatten.any?{|square| square.has_bomb?}
+    end
+
 end
 
 # test:
 
 if __FILE__ == $PROGRAM_NAME
 
-    FLAGGED_MSG = "You cannot reveal a flagged tile! First unflag it."
-    ALREADY_REVEALED_MSG = "Tile already revealed. Pick another one."
+    #FLAGGED_MSG = "You cannot reveal a flagged tile! First unflag it."
+    #ALREADY_REVEALED_MSG = "Tile already revealed. Pick another one."
 
 
     b = Board.new

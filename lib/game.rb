@@ -1,11 +1,30 @@
 class Game
 
     require_relative './board.rb'
+    require 'yaml'
 
     FLAGGED_MSG = "You cannot reveal a flagged tile! First unflag it."
     ALREADY_REVEALED_MSG = "Tile already revealed. Pick another one."
     WRONG_INPUT = "Please enter R/r or F/f followed by space and a position. Like r 3,3"
 
+    def self.ask_load_game
+        puts
+        puts "Enter L or l to load a previously saved game, or N/n for new game!"
+        user_input = " "
+        until "NnLl".include?(user_input)
+            unless user_input == " "
+                puts "Please enter L/l to load a game or N/n for new game."
+            end
+            user_input = gets.chomp
+        end
+        user_input.upcase
+    end
+
+    def self.ask_file_name
+        puts
+        puts "Please enter a filename:"
+        gets.chomp
+    end
 
     def initialize
         @board = Board.new
@@ -19,8 +38,11 @@ class Game
     end
 
     def get_input
-        puts "Please enter R to reveal or F to flag/unflag followed by space and position"
-        puts "For ex.: R 3,3 or F 2,3"
+        puts "Please enter a command as below:"
+        puts "________________________________"
+        puts "R (or r) followed by space and a position to reveal. Ex: R 3,3." 
+        puts "F (or f) followed by space and a position to flag/unflag. Ex: F 1,2."
+        puts "S (or s) followed by filename to save."
         gets.chomp
     end
 
@@ -31,16 +53,6 @@ class Game
     def parse_pos (raw_user_input)
         raw_pos = raw_user_input[2..-1]
         raw_pos.split(",").map(&:to_i)
-    end
-
-    def check_input(raw_user_input)
-        possible_cmd = raw_user_input[0]
-        possible_pos = raw_user_input[2..-1]
-        return false if raw_user_input.length != 5
-        return false unless ["R","F"].include?(possible_cmd.upcase)
-        return false unless raw_user_input[1] == " "
-        return false unless possible_pos.split(",").all? {|digit| ("0".."8").include?(digit)}
-        return true
     end
 
     def prompt_error(msg)
@@ -59,12 +71,12 @@ class Game
         @board.revealed?(pos)
     end
 
-    def f_cmd(pos)
+    def flag_cmd(pos)
         @board.flag(pos)
         true
     end 
 
-    def r_cmd(pos)
+    def reveal_cmd(pos)
         if is_pos_flagged?(pos)
             prompt_error(FLAGGED_MSG)
             return true
@@ -78,30 +90,65 @@ class Game
             return true
         end
     end
-            
+    
+    def check_cmd(cmd)
+        return false if cmd.empty?
+        return false unless "RFS".include?(cmd)
+        true
+    end
+
+    def check_pos(pos)
+        return false unless pos.all? {|digit| (0..8).include?(digit)}
+        true
+    end
+
+    def get_cmd
+        cmd = ""
+        puts "Please enter a command. R/r =  reveal, F/f = flag/unflag, S/s = save game"
+        until check_cmd(cmd)
+            puts "Wrong command. Enter R, F, or S to Reveal, Flag or Save" unless cmd.empty?
+            cmd = gets.chomp.upcase
+        end
+        cmd
+    end
+
+    def get_pos
+        puts "Please enter a position in the format 4,3 or 2,3"
+        gets.chomp.split(",").map(&:to_i)
+    end
+    
+    def get_filename
+        puts "Please enter a file name"
+        gets.chomp
+    end
+        
+
     def run
         prompt
-        raw_user_input = ""
-        until check_input (raw_user_input)    
-            unless raw_user_input == "" 
-                prompt_error(WRONG_INPUT)
-            end
-            raw_user_input = get_input
+        #debugger
+        cmd = get_cmd
+        if cmd == "S"
+            filename = get_filename
+        else
+            pos = get_pos
         end
-
-        pos = parse_pos(raw_user_input)
-        cmd = parse_cmd(raw_user_input)
 
         case cmd
         when "F"
-            return f_cmd(pos)
+            return flag_cmd(pos)
         when "R"
-            return r_cmd(pos)
+            return reveal_cmd(pos)
+        when "S"
+            File.open(filename, "w") { |f| f.write(YAML.dump(self)) }
+            puts "Game saved. See you soon!"
+            exit
         end
     end
 
+
+
     def play 
-        @board.fill_bombs
+        @board.fill_bombs unless @board.board_already_filled? 
         keep_running = true
         until keep_running == false || @board.won?
             keep_running = self.run
@@ -121,7 +168,17 @@ class Game
 end
 
 if __FILE__ == $PROGRAM_NAME
-    g = Game.new
+    puts 
+    system ("clear")
+    puts "Welcome to ABV4594's Minesweeper game"
+    puts "_____________________________________"
+    puts
+    user_option = Game.ask_load_game
+    if user_option == "L"
+        g = YAML.load(File.read(Game.ask_file_name))
+    else
+        g = Game.new
+    end
     g.play
 end
 
